@@ -1,16 +1,17 @@
 package dev.el.atm;
 
 import dev.el.atm.engine.Atm;
+import dev.el.atm.engine.Note;
 
-import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 
 public class MainClass {
 
     public static void main(String[] args) {
         Atm atm = Atm.getInstance();
-        atm.putAmount(new BigDecimal(1100.00));
-        List<Double> doubleList = atm.takeAmount(new BigDecimal(1100.00));
-        System.out.println(doubleList.toString());
+        atm.putAmount(Arrays.asList(Note.ONE_HUNDRED, Note.ONE_HUNDRED, Note.ONE_HUNDRED));
+        List<Note> noteList = atm.takeAmount(127.00);
+        System.out.println(noteList);
     }
 }

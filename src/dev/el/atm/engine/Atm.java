@@ -1,13 +1,19 @@
 package dev.el.atm.engine;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Atm {
     private static volatile Atm instance = null;
-    private volatile BigDecimal moneyStorage = new BigDecimal(100.00);
-    private double note[] = {1.00,5.00, 10.00, 20.00, 50.00, 100.00, 200.00, 500.00};
+    private volatile Double moneyStorage = 100.00;
+    private List<Note> noteList = Arrays.asList(
+            Note.ONE,
+            Note.FIVE,
+            Note.TEN,
+            Note.TWENTY_FIVE,
+            Note.FIFTY,
+            Note.ONE_HUNDRED);
 
     private Atm() {
     }
@@ -25,16 +31,17 @@ public class Atm {
     }
 
     //Просто волатайл здесь не поможет так как операция не атомарная
-    public void putAmount(BigDecimal amount) {
-        synchronized (this.moneyStorage){
-            moneyStorage = moneyStorage.add(amount);
+    public void putAmount(List<Note> noteList) {
+        synchronized (this.moneyStorage) {
+            for (Note note : noteList) {
+                moneyStorage += note.getNoteValue();
+            }
         }
     }
 
-    public List<Double> takeAmount(BigDecimal amount) {
-        synchronized (this.moneyStorage){
+    public List<Note> takeAmount(Double amount) {
+        synchronized (this.moneyStorage) {
             if (checkHasAmount(amount)) {
-                moneyStorage = moneyStorage.subtract(amount);
                 return calculateMoney(amount);
             } else {
                 throw new IllegalStateException("Не достаточно средств");
@@ -42,28 +49,29 @@ public class Atm {
         }
     }
 
-    private List<Double> calculateMoney(BigDecimal amount) {
-        List<Double> list = new ArrayList<>();
+    public synchronized Double checkBalance() {
+        return moneyStorage;
+    }
+
+    private List<Note> calculateMoney(Double amount) {
+        List<Note> list = new ArrayList<>();
         double summary = amount.doubleValue();
-        int i = note.length - 1;
+        int i = noteList.size() - 1;
         while (i >= 0)
-            if (note[i] > summary)
+            if (noteList.get(i).getNoteValue() > summary)
                 i--;
             else {
-                list.add(note[i]);
-                summary -= note[i];
+                list.add(noteList.get(i));
+                summary -= noteList.get(i).getNoteValue();
             }
         return list;
     }
 
-    private boolean checkHasAmount(BigDecimal amount) {
-        if (moneyStorage.compareTo(amount) == 0) {
-            return true;
-        } else if (moneyStorage.compareTo(amount) == 1) {
-            return true;
-        } else {
+    private boolean checkHasAmount(Double amount) {
+        if (amount > moneyStorage) {
             return false;
         }
+        return true;
     }
 
 }
